@@ -1,22 +1,22 @@
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, ForeignKey
-from sqlalchemy.orm import relationship, sessionmaker
-from sqlalchemy.ext.declarative import declarative_base
+from sqlalchemy import create_engine, Column, Integer, String, URL, ForeignKey
+from sqlalchemy.orm import declarative_base, sessionmaker
 
 
-user = "root"
-password = "MY$QL@l3x40!$!"
-host = "localhost"
-database = "ee_db"
+Base = declarative_base()
 
-mysql_url = f"mysql+mysqlconnector://{user}:{password}@{host}/{database}"
+db_url = URL.create(
+    "mysql+mysqldb",
+    username="root",
+    password="MY$QL@l3x40!$!",
+    host="localhost",
+    database="ee_db",
+)
 
-engine = create_engine(mysql_url)
-
+engine = create_engine(db_url, echo=True)
+Base.metadata.create_all(bind=engine)
 
 Session = sessionmaker(bind=engine)
 session = Session()
-
-Base = declarative_base()
 
 
 class Collaborater(Base):
@@ -27,29 +27,21 @@ class Collaborater(Base):
     email = Column(String, unique=True)
     password = Column(String)
     phone = Column(String)
+    team = Column(String)
 
-    team_id = Column(Integer, ForeignKey("teams.id"))
-    team = relationship("Team", back_populates="collaboraters")
+    def __init__(self, id, username, email, password, phone, team):
+        self.id = id
+        self.username = username
+        self.email = email
+        self.password = password
+        self.phone = phone
+        self.team = team
 
-
-class Team(Base):
-    __tablename__ = "teams"
-    id = Column(Integer, primary_key=True)
-    team_name = Column(String, unique=True)
-
-    collaboraters = relationship("Collaborater", back_populates="team")
-
-
-class SalesTeam(Base):
-    __tablename__ = "sales_team"
-    id = Column(Integer, primary_key=True)
+    def __repr__(self):
+        return f"({self.id}) {self.username}, {self.email}, {self.phone}"
 
 
-class GestureTeam(Base):
-    __tablename__ = "gesture_team"
-    id = Column(Integer, primary_key=True)
+c1 = Collaborater(7, "TEST", "test@gmail.com", "Test1234", "0612233456", "support_team")
 
-
-class SupportTeam(Base):
-    __tablename__ = "support_team"
-    id = Column(Integer, primary_key=True)
+session.add(c1)
+session.commit()
