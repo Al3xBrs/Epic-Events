@@ -8,7 +8,7 @@ class Collaborater(models.Model):
         ("SL", "sale_team"),
     ]
 
-    id = models.UUIDField(unique=True)
+    id = models.UUIDField(unique=True, primary_key=True)
     username = models.CharField(max_length=20)
     email = models.EmailField(unique=True)
     phone = models.IntegerField()
@@ -16,7 +16,7 @@ class Collaborater(models.Model):
 
 
 class Customer(models.Model):
-    id = models.UUIDField(unique=True)
+    id = models.UUIDField(unique=True, primary_key=True)
     email = models.EmailField(unique=True)
     phone = models.IntegerField()
     create_date = models.DateField()
@@ -25,23 +25,23 @@ class Customer(models.Model):
         to=Collaborater,
         on_delete=models.SET_NULL,
         null=True,
-        related_name="commercial",
+        related_name="customer_commercial",
     )
 
 
 class Contract(models.Model):
-    id = models.UUIDField(unique=True)
+    id = models.UUIDField(unique=True, primary_key=True)
     customer = models.ForeignKey(
         to=Customer,
         on_delete=models.SET_NULL,
         null=True,
-        related_name="customer",
+        related_name="contract_customer",
     )
     commercial = models.ForeignKey(
         to=Collaborater,
         on_delete=models.SET_NULL,
         null=True,
-        related_name="commercial",
+        related_name="contract_commercial",
     )
     price = models.FloatField()
     create_date = models.DateField()
@@ -49,18 +49,18 @@ class Contract(models.Model):
 
 
 class Events(models.Model):
-    id = models.UUIDField(unique=True)
+    id = models.UUIDField(unique=True, primary_key=True)
     contract = models.ForeignKey(
         to=Contract,
         on_delete=models.SET_NULL,
         null=True,
-        related_name="contract",
+        related_name="event_contract",
     )
     customer = models.ForeignKey(
         to=Customer,
         on_delete=models.SET_NULL,
         null=True,
-        related_name="customer",
+        related_name="event_customer",
     )
     start_date = models.DateField()
     end_date = models.DateField()
@@ -68,7 +68,7 @@ class Events(models.Model):
         to=Collaborater,
         on_delete=models.SET_NULL,
         null=True,
-        related_name="support",
+        related_name="event_support",
     )
     location = models.CharField(max_length=1000)
     attendees = models.IntegerField()
