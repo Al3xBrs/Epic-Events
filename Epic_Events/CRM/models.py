@@ -23,7 +23,8 @@ class Customer(models.Model):
     update_date = models.DateField()
     commercial = models.ForeignKey(
         to=Collaborater,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
         related_name="commercial",
     )
 
@@ -32,12 +33,14 @@ class Contract(models.Model):
     id = models.UUIDField(unique=True)
     customer = models.ForeignKey(
         to=Customer,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
         related_name="customer",
     )
     commercial = models.ForeignKey(
         to=Collaborater,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
         related_name="commercial",
     )
     price = models.FloatField()
@@ -49,19 +52,22 @@ class Events(models.Model):
     id = models.UUIDField(unique=True)
     contract = models.ForeignKey(
         to=Contract,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
         related_name="contract",
     )
     customer = models.ForeignKey(
         to=Customer,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
         related_name="customer",
     )
     start_date = models.DateField()
     end_date = models.DateField()
     support = models.ForeignKey(
         to=Collaborater,
-        on_delete=models.CASCADE,
+        on_delete=models.SET_NULL,
+        null=True,
         related_name="support",
     )
     location = models.CharField(max_length=1000)
