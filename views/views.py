@@ -2,6 +2,9 @@ from .decorators import (
     log_decorator,
     error_decorator,
     menu_decorator,
+    customers_decorator,
+    contracts_decorator,
+    events_decorator,
 )
 
 
@@ -14,10 +17,10 @@ class MainView:
         Please, enter your mail and your password.
         """
         )
-        email = input("Your mail : ")
+        username = input("Your username : ")
         password = input("Your pwd : ")
 
-        return email, password
+        return username, password
 
     @error_decorator
     @staticmethod
@@ -30,27 +33,54 @@ class MainView:
 
     @menu_decorator
     @staticmethod
-    def menu_sale():
+    def menu():
         print(
             """
-        1 - 
+        1 - Customers 
+        2 - Contracts 
+        3 - Events
+        4 - Quit
         """
         )
+        return input("CHOICE : ")
 
-    @menu_decorator
-    @staticmethod
-    def menu_support():
-        print(
-            """
-        1 - 
-        """
-        )
 
-    @menu_decorator
+class SubmenuView:
+    @customers_decorator
     @staticmethod
-    def menu_gesture():
+    def customers():
         print(
-            """
-        1 - 
+            """ 
+        1 - All Customers
+        2 - Your Customers
+        3 - Create 
+        4 - Return Menu
         """
         )
+        return input("CHOICE : ")
+
+    @contracts_decorator
+    @staticmethod
+    def contracts():
+        print(
+            """ 
+        1 - All Contracts
+        2 - Your Contracts
+        3 - Create
+        4 - Return Menu
+        """
+        )
+        return input("CHOICE : ")
+
+    @events_decorator
+    @staticmethod
+    def events():
+        print(
+            """ 
+        1 - All Events
+        2 - Your Events
+        3 - Create
+        4 - Return Menu
+        """
+        )
+        return input("CHOICE : ")

@@ -1,7 +1,11 @@
-from controllers.controllers import MainController
+from controllers.controllers import MainController, SubmenuController
 
 routes = {
     "auth_controller": MainController.auth_controller,
+    "menu_controller": MainController.menu_controller,
+    "customers_controller": SubmenuController.customers_controller,
+    "contracts_controller": SubmenuController.contracts_controller,
+    "events_controller": SubmenuController.events_controller,
 }
 
 
