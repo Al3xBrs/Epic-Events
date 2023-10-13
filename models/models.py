@@ -110,7 +110,7 @@ class Collaborater(Base):
         return f"User {self.username}"
 
 
-def start():
+def init_base():
     USERNAME = config("DB_USER")
     PASSWORD = config("DB_PASSWORD")
     HOST = config("DB_HOST")

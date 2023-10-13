@@ -14,7 +14,7 @@ class MainView:
     def auth():
         print(
             """
-        Please, enter your mail and your password.
+        Please, enter your username and your password.
         """
         )
         username = input("Your username : ")
