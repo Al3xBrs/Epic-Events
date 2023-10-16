@@ -32,6 +32,15 @@ class ErrorView:
         """
         )
 
+    @error_decorator
+    @staticmethod
+    def choice_error():
+        print(
+            """ 
+        Please, use a correct choice. (Ex : 1,2,3, ...)
+        """
+        )
+
 
 class MainView:
     @log_decorator
@@ -77,37 +86,6 @@ class SubmenuView:
         3 - Create 
         4 - Filter
 
-        5 - Return Menu
-        """
-        )
-        return input("CHOICE : ")
-
-    @customers_decorator
-    @staticmethod
-    def all_customers(customers_list):
-        print(
-            f""" 
-        {customers_list}
-        1 - Your Customers
-
-        2 - Create 
-        3 - Filter
-
-        4 - Return Menu
-        """
-        )
-        return input("CHOICE : ")
-
-    @customers_decorator
-    @staticmethod
-    def your_customers(customers_list):
-        print(
-            f""" 
-        {customers_list}
-        1 - Select One
-        2 - All Customers
-        3 - Create
-        4 - Filter
         5 - Return Menu
         """
         )
@@ -172,6 +150,51 @@ class SubmenuView:
         """
         )
         return input("CHOICE : ")
+
+
+class CustomersView:
+    @customers_decorator
+    @staticmethod
+    def all_customers(customers_list):
+        for customer in customers_list:
+            print(str(customer).replace("(", "").replace(")", "").replace("'", ""))
+        print(
+            """ 
+        1 - Your Customers
+
+        2 - Create 
+        3 - Filter
+
+        4 - Return Menu
+        """
+        )
+        return input("CHOICE : ")
+
+    @customers_decorator
+    @staticmethod
+    def your_customers(customers_list):
+        print(
+            f""" 
+        {customers_list}
+        1 - All Customers
+
+        2 - Create
+        3 - Filter
+
+        4 - Return Menu
+        """
+        )
+        return input("CHOICE : ")
+
+
+# TODO
+class ContractsView:
+    pass
+
+
+# TODO
+class EventsView:
+    pass
 
 
 class FilterView:

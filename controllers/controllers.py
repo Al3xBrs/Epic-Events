@@ -1,6 +1,8 @@
+import datetime
+import uuid
 import psycopg2
 from decouple import config
-from views.views import MainView, SubmenuView, ErrorView
+from views.views import CRUDView, MainView, SubmenuView, ErrorView, CustomersView
 from .permissions import (
     is_authenticated,
     is_sale,
@@ -56,8 +58,17 @@ class MainController:
         elif choice == "3":
             return "events_controller", payload
 
+        elif choice == "4":
+            return "collaborators_controller", payload
+
+        elif choice == "5":
+            return "select_one_controller", payload
+
         elif choice == "6":
             return "auth_controller", payload
+        else:
+            ErrorView.choice_error()
+            return "menu_controller", payload
 
 
 class SubmenuController:
@@ -75,7 +86,43 @@ class SubmenuController:
             return "filter_controller", payload
         elif choice == "5":
             return "menu_controller", payload
+        else:
+            ErrorView.choice_error()
+            return "customers_controller", payload
 
+    @classmethod
+    def contracts_controller(cls, payload):
+        choice = SubmenuView.contracts()
+
+        if choice == "5":
+            return "menu_controller", payload
+        else:
+            ErrorView.choice_error()
+            return "contracts_controller", payload
+
+    @classmethod
+    def events_controller(cls, payload):
+        choice = SubmenuView.events()
+
+        if choice == "5":
+            return "menu_controller", payload
+        else:
+            ErrorView.choice_error()
+            return "events_controller", payload
+
+    @classmethod
+    def find_one_controller(cls, payload):
+        obj = payload["obj"]
+        choice = SubmenuView.find_one(obj)
+        if choice == "1":
+            return "update_controller", payload
+        elif choice == "2":
+            return "delete_controller", payload
+        elif choice == "3":
+            return "menu_controller", payload
+
+
+class CustomerController:
     @classmethod
     def all_customers_controller(cls, payload):
         query = "SELECT name, email, company FROM customer"
@@ -84,7 +131,7 @@ class SubmenuController:
         payload["customers_list"] = customers_list
 
         if customers_list:
-            choice = SubmenuView.all_customers(customers_list)
+            choice = CustomersView.all_customers(customers_list)
             if choice == "1":
                 return "your_customers_controller", payload
             elif choice == "2":
@@ -94,22 +141,73 @@ class SubmenuController:
             elif choice == "4":
                 return "customers_controller", payload
             else:
-                print("Please, select 1/2/3/4")
+                ErrorView.choice_error()
                 return "all_customers_controller", payload
         else:
             ErrorView.query_not_find()
             return "customers_controller", payload
 
     @classmethod
-    def contracts_controller(cls, payload):
-        choice = SubmenuView.contracts()
+    def your_customers(cls, payload):
+        commercial_username = "TESTCOLL"
+        query = f"SELECT name, email, company FROM customer WHERE commercial_username = '{commercial_username}'"
+        cur.execute(query)
+        customers_list = cur.fetchall()
+        payload["your_customers"] = customers_list
 
-        if choice == "5":
-            return "menu_controller", payload
+        if customers_list:
+            choice = CustomersView.your_customers(customers_list)
+            if choice == "1":
+                return "all_customers_controller", payload
+            elif choice == "2":
+                return "create_controller", payload
+            elif choice == "3":
+                return "filter_controller", payload
+            elif choice == "4":
+                return "customers_controller", payload
+            else:
+                ErrorView.choice_error()
+                return "your_customers_controller", payload
 
+        else:
+            ErrorView.query_not_find()
+            return "your_customers_controller", payload
+
+
+class CRUDController:
     @classmethod
-    def events_controller(cls, payload):
-        choice = SubmenuView.events()
+    def create_controller(cls, payload):
+        (
+            name,
+            email,
+            phone,
+            company,
+            sales_person,
+            price,
+            contract_id,
+            start_date,
+            end_date,
+            location,
+            attendees,
+        ) = CRUDView.create()
+        id = uuid.uuid1()
+        now = datetime.datetime.now()
+        create_date = now.strftime("%m-%-d-%Y")
+        update_date = now.strftime("%m-%d-%Y %H:%M:%S")
+        commercial_username = "TESTCOLL"
+        query = f"INSERT INTO customer (id, name, email, phone, company, create_date, update_date, commercial_username) VALUES ('{id}', '{name}', '{email}', {phone}, '{company}', '{create_date}', '{update_date}', '{commercial_username}') RETURNING *"
+        cur.execute(query)
+        conn.commit()
+        obj = cur.fetchone()
+        payload["obj"] = obj
+        return "find_one_controller", payload
 
-        if choice == "5":
-            return "menu_controller", payload
+    # TODO
+    @classmethod
+    def delete_controller(cls, payload):
+        pass
+
+    # TODO
+    @classmethod
+    def update_controller(cls, payload):
+        pass

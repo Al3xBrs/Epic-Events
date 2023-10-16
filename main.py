@@ -1,4 +1,9 @@
-from controllers.controllers import MainController, SubmenuController
+from controllers.controllers import (
+    MainController,
+    SubmenuController,
+    CustomerController,
+    CRUDController,
+)
 
 routes = {
     "auth_controller": MainController.auth_controller,
@@ -6,7 +11,10 @@ routes = {
     "customers_controller": SubmenuController.customers_controller,
     "contracts_controller": SubmenuController.contracts_controller,
     "events_controller": SubmenuController.events_controller,
-    "all_customers_controller": SubmenuController.all_customers_controller,
+    "all_customers_controller": CustomerController.all_customers_controller,
+    "your_customers_controller": CustomerController.your_customers,
+    "create_controller": CRUDController.create_controller,
+    "find_one_controller": SubmenuController.find_one_controller,
 }
 
 
