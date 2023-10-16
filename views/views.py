@@ -13,6 +13,26 @@ from .decorators import (
 )
 
 
+class ErrorView:
+    @error_decorator
+    @staticmethod
+    def auth_error():
+        print(
+            """
+        Error, can't find any user with this ... 
+        """
+        )
+
+    @error_decorator
+    @staticmethod
+    def query_not_find():
+        print(
+            """ 
+        Error, can't find the query ...
+        """
+        )
+
+
 class MainView:
     @log_decorator
     @staticmethod
@@ -26,15 +46,6 @@ class MainView:
         password = input("Your pwd : ")
 
         return username, password
-
-    @error_decorator
-    @staticmethod
-    def auth_error():
-        print(
-            """
-        Error, can't find any user with this ... 
-        """
-        )
 
     @menu_decorator
     @staticmethod

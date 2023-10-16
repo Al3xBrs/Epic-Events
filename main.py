@@ -6,6 +6,7 @@ routes = {
     "customers_controller": SubmenuController.customers_controller,
     "contracts_controller": SubmenuController.contracts_controller,
     "events_controller": SubmenuController.events_controller,
+    "all_customers_controller": SubmenuController.all_customers_controller,
 }
 
 
