@@ -45,7 +45,7 @@ class MainController:
         elif choice == "3":
             return "events_controller", payload
 
-        elif choice == "4":
+        elif choice == "6":
             return "auth_controller", payload
 
 
@@ -54,19 +54,32 @@ class SubmenuController:
     def customers_controller(cls, payload):
         choice = SubmenuView.customers()
 
-        if choice == "4":
+        if choice == "1":
+            return "all_customers_controller", payload
+        elif choice == "2":
+            return "your_customers_controller", payload
+        elif choice == "3":
+            return "create_controller", payload
+        elif choice == "4":
+            return "filter_controller", payload
+        elif choice == "5":
             return "menu_controller", payload
+
+    @classmethod
+    def all_customers_controller(cls, payload):
+        customers_list = ["test"]
+        choice = SubmenuView.all_customers(customers_list)
 
     @classmethod
     def contracts_controller(cls, payload):
         choice = SubmenuView.contracts()
 
-        if choice == "4":
+        if choice == "5":
             return "menu_controller", payload
 
     @classmethod
     def events_controller(cls, payload):
         choice = SubmenuView.events()
 
-        if choice == "4":
+        if choice == "5":
             return "menu_controller", payload

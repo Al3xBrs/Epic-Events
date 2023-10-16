@@ -50,3 +50,48 @@ def events_decorator(function):
         return result
 
     return func
+
+
+def filter_decorator(function):
+    def func(*args, **kwargs):
+        print("---------- FILTERS ----------")
+        result = function(*args, **kwargs)
+        return result
+
+    return func
+
+
+def create_decorator(function):
+    def func(*args, **kwargs):
+        print("---------- CREATE ----------")
+        result = function(*args, **kwargs)
+        return result
+
+    return func
+
+
+def update_decorator(function):
+    def func(*args, **kwargs):
+        print("---------- UPDATE ----------")
+        result = function(*args, **kwargs)
+        return result
+
+    return func
+
+
+def delete_decorator(function):
+    def func(*args, **kwargs):
+        print("---------- DELETE ----------")
+        result = function(*args, **kwargs)
+        return result
+
+    return func
+
+
+def select_one_decorator(function):
+    def func(*args, **kwargs):
+        print("---------- SELECT ONE ----------")
+        result = function(*args, **kwargs)
+        return result
+
+    return func
