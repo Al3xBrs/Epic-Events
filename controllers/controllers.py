@@ -1,14 +1,23 @@
 import datetime
+from pydoc import cli
 import uuid
 import psycopg2
 from decouple import config
-from views.views import CRUDView, MainView, SubmenuView, ErrorView, CustomersView
+from views.views import (
+    CRUDView,
+    ContractsView,
+    MainView,
+    SubmenuView,
+    ErrorView,
+    CustomersView,
+)
 from .permissions import (
     is_authenticated,
     is_sale,
     is_support,
     is_gesture,
 )
+
 
 conn = psycopg2.connect(
     user=config("DB_USER"),
@@ -94,7 +103,15 @@ class SubmenuController:
     def contracts_controller(cls, payload):
         choice = SubmenuView.contracts()
 
-        if choice == "5":
+        if choice == "1":
+            return "all_contracts_controller", payload
+        elif choice == "2":
+            return "your_contracts_controller", payload
+        elif choice == "3":
+            return "create_controller", payload
+        elif choice == "4":
+            return "filter_controller", payload
+        elif choice == "5":
             return "menu_controller", payload
         else:
             ErrorView.choice_error()
@@ -150,8 +167,10 @@ class CustomerController:
     @classmethod
     def your_customers(cls, payload):
         commercial_username = "TESTCOLL"
-        query = f"SELECT name, email, company FROM customer WHERE commercial_username = '{commercial_username}'"
-        cur.execute(query)
+        query = (
+            f"SELECT name, email, company FROM customer WHERE commercial_username = %s"
+        )
+        cur.execute(query, (commercial_username,))
         customers_list = cur.fetchall()
         payload["your_customers"] = customers_list
 
@@ -172,6 +191,58 @@ class CustomerController:
         else:
             ErrorView.query_not_find()
             return "your_customers_controller", payload
+
+
+class ContractController:
+    @classmethod
+    def all_contracts_controller(cls, payload):
+        query = "SELECT customer_name, commercial_username, price, create_date, status FROM contract"
+        cur.execute(query)
+        contracts_list = cur.fetchall()
+        payload["contracts_list"] = contracts_list
+
+        if contracts_list:
+            choice = ContractsView.all_contracts(contracts_list)
+            if choice == "1":
+                return "your_contracts_controller", payload
+            if choice == "2":
+                return "create_controller", payload
+            if choice == "3":
+                return "filter_controller", payload
+            if choice == "4":
+                return "contracts_controller", payload
+            else:
+                ErrorView.choice_error()
+                return "all_contracts_controller", payload
+        else:
+            ErrorView.query_not_find()
+            return "contracts_controller", payload
+
+    @classmethod
+    def your_contracts_controller(cls, payload):
+        commercial_username = "TESTCOLL"
+        query = "SELECT customer_name, commercial_username, price, create_date, status FROM contract WHERE commercial_username = %s"
+        cur.execute(query, (commercial_username,))
+        contracts_list = cur.fetchall()
+        payload["your_contracts"] = contracts_list
+
+        if contracts_list:
+            choice = ContractsView.your_contracts(contracts_list)
+            if choice == "1":
+                return "all_contracts_controller", payload
+            elif choice == "2":
+                return "create_controller", payload
+            elif choice == "3":
+                return "filter_controller", payload
+            elif choice == "4":
+                return "contracts_controller", payload
+            else:
+                ErrorView.choice_error()
+                return "your_contracts_controller", payload
+
+        else:
+            ErrorView.query_not_find()
+            return "your_contracts_controller", payload
 
 
 class CRUDController:

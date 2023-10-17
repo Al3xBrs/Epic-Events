@@ -173,9 +173,10 @@ class CustomersView:
     @customers_decorator
     @staticmethod
     def your_customers(customers_list):
+        for customer in customers_list:
+            print(str(customer).replace("(", "").replace(")", "").replace("'", ""))
         print(
-            f""" 
-        {customers_list}
+            """ 
         1 - All Customers
 
         2 - Create
@@ -187,9 +188,48 @@ class CustomersView:
         return input("CHOICE : ")
 
 
-# TODO
 class ContractsView:
-    pass
+    @contracts_decorator
+    @staticmethod
+    def all_contracts(contracts_list):
+        for contract in contracts_list:
+            customer_name, commercial_username, price, create_date, status = contract
+            formatted_date = create_date.strftime("%Y-%m-%d")
+            print(
+                f"Customer Name: {customer_name}, Commercial Username: {commercial_username}, Price: {price}, Create Date: {formatted_date}, Status: {status}"
+            )
+        print(
+            """ 
+        1 - Your Contracts
+        
+        2 - Create
+        3 - Filter
+
+        4 - Return Menu
+        """
+        )
+        return input("CHOICE : ")
+
+    @contracts_decorator
+    @staticmethod
+    def your_contracts(contracts_list):
+        for contract in contracts_list:
+            customer_name, commercial_username, price, create_date, status = contract
+            formatted_date = create_date.strftime("%Y-%m-%d")
+            print(
+                f"Customer Name: {customer_name}, Commercial Username: {commercial_username}, Price: {price}, Create Date: {formatted_date}, Status: {status}"
+            )
+        print(
+            """ 
+        1 - All Contracts
+        
+        2 - Create
+        3 - Filter
+
+        4 - Return Menu
+        """
+        )
+        return input("CHOICE : ")
 
 
 # TODO
