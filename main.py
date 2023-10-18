@@ -4,6 +4,7 @@ from controllers.controllers import (
     CustomerController,
     CRUDController,
     ContractController,
+    EventController,
 )
 
 
@@ -17,6 +18,8 @@ routes = {
     "all_contracts_controller": ContractController.all_contracts_controller,
     "your_contracts_controller": ContractController.your_contracts_controller,
     "events_controller": SubmenuController.events_controller,
+    "all_events_controller": EventController.all_events_controller,
+    "your_events_controller": EventController.your_events_controller,
     "create_controller": CRUDController.create_controller,
     "find_one_controller": SubmenuController.find_one_controller,
 }

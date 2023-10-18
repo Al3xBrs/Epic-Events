@@ -1,4 +1,5 @@
 import datetime
+from email.policy import default
 from pydoc import cli
 import uuid
 import psycopg2
@@ -6,6 +7,7 @@ from decouple import config
 from views.views import (
     CRUDView,
     ContractsView,
+    EventsView,
     MainView,
     SubmenuView,
     ErrorView,
@@ -17,7 +19,8 @@ from .permissions import (
     is_support,
     is_gesture,
 )
-
+import bcrypt
+import jwt
 
 conn = psycopg2.connect(
     user=config("DB_USER"),
@@ -35,21 +38,26 @@ class MainController:
     @classmethod
     def auth_controller(cls, payload):
         username, pwd = MainView.auth()
-        # adapt
-        log = ["aa"]
-        # TODO : Check for user in db
-        # user.is_autenticated = True
+        salt = bcrypt.gensalt()
+        hashed = bcrypt.hashpw(pwd.encode("utf-8"), salt)
 
-        # if is_authenticated(user):
-        #     if is_gesture(user):
-        #         return "ss", payload
-        #     if is_sale(user):
-        #         return "ss", payload
-        #     if is_support(user):
-        #         return "ss", payload
+        query = "SELECT username, password, role FROM collaborater WHERE username = %s"
+        cur.execute(query, (username,))
+        user = cur.fetchone()
 
-        if username + pwd in log:
-            return "menu_controller", payload
+        if user:
+            stored_pwd = user[1]
+            if bcrypt.checkpw(hashed, stored_pwd.encode("utf-8")):
+                key = config("KEY")
+                token = jwt.encode(
+                    {"username": username, "role": user[2]}, key, algorithm="H256"
+                )
+                payload["token"] = token
+                return "menu_controller", payload
+
+            else:
+                ErrorView.auth_error()
+                return "auth_controller", payload
         else:
             ErrorView.auth_error()
             return "auth_controller", payload
@@ -121,7 +129,15 @@ class SubmenuController:
     def events_controller(cls, payload):
         choice = SubmenuView.events()
 
-        if choice == "5":
+        if choice == "1":
+            return "all_events_controller", payload
+        elif choice == "2":
+            return "your_events_controller", payload
+        elif choice == "3":
+            return "create_controller", payload
+        elif choice == "4":
+            return "filter_controller", payload
+        elif choice == "5":
             return "menu_controller", payload
         else:
             ErrorView.choice_error()
@@ -243,6 +259,57 @@ class ContractController:
         else:
             ErrorView.query_not_find()
             return "your_contracts_controller", payload
+
+
+class EventController:
+    @classmethod
+    def all_events_controller(cls, payload):
+        query = "SELECT customer_name, start_date, end_date, support_username, location, attendees, description FROM event"
+        cur.execute(query)
+        events_list = cur.fetchall()
+        payload["events_list"] = events_list
+
+        choice = EventsView.all_events(events_list)
+        if events_list:
+            if choice == "1":
+                return "your_events_controller", payload
+            elif choice == "2":
+                return "create_controller", payload
+            elif choice == "3":
+                return "filter_controller", payload
+            elif choice == "4":
+                return "events_controller", payload
+            else:
+                ErrorView.choice_error()
+                return "all_events_controller", payload
+        else:
+            ErrorView.query_not_find()
+            return "events_controller", payload
+
+    @classmethod
+    def your_events_controller(cls, payload):
+        commercial_username = "TESTCOLL"
+        query = "SELECT customer_name, start_date, end_date, support_username, location, attendees, description FROM event WHERE support_username = %s"
+        cur.execute(query, (commercial_username,))
+        events_list = cur.fetchall()
+        payload["events_list"] = events_list
+
+        choice = EventsView.your_events(events_list)
+        if events_list:
+            if choice == "1":
+                return "all_events_controller", payload
+            elif choice == "2":
+                return "create_controller", payload
+            elif choice == "3":
+                return "filter_controller", payload
+            elif choice == "4":
+                return "events_controller", payload
+            else:
+                ErrorView.choice_error()
+                return "all_events_controller", payload
+        else:
+            ErrorView.query_not_find()
+            return "events_controller", payload
 
 
 class CRUDController:

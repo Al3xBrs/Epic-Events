@@ -157,7 +157,8 @@ class CustomersView:
     @staticmethod
     def all_customers(customers_list):
         for customer in customers_list:
-            print(str(customer).replace("(", "").replace(")", "").replace("'", ""))
+            name, email, company = customer
+            print(f"Name : {name}, Email : {email}, Company : {company}")
         print(
             """ 
         1 - Your Customers
@@ -174,7 +175,8 @@ class CustomersView:
     @staticmethod
     def your_customers(customers_list):
         for customer in customers_list:
-            print(str(customer).replace("(", "").replace(")", "").replace("'", ""))
+            name, email, company = customer
+            print(f"Name : {name}, Email : {email}, Company : {company}")
         print(
             """ 
         1 - All Customers
@@ -232,9 +234,62 @@ class ContractsView:
         return input("CHOICE : ")
 
 
-# TODO
 class EventsView:
-    pass
+    @events_decorator
+    @staticmethod
+    def all_events(events_list):
+        for event in events_list:
+            (
+                customer_name,
+                start_date,
+                end_date,
+                support,
+                location,
+                attendees,
+                description,
+            ) = event
+            print(
+                f"Customer : {customer_name}, Start : {start_date}, End : {end_date}, Support : {support}, Location : {location}, Attendees : {attendees}, Description : {description}"
+            )
+        print(
+            """ 
+        1 - Your Events
+        
+        2 - Create
+        3 - Filter
+
+        4 - Return Menu
+        """
+        )
+        return input("CHOICE : ")
+
+    @events_decorator
+    @staticmethod
+    def your_events(events_list):
+        for event in events_list:
+            (
+                customer_name,
+                start_date,
+                end_date,
+                support,
+                location,
+                attendees,
+                description,
+            ) = event
+            print(
+                f"Customer : {customer_name}, Start : {start_date}, End : {end_date}, Support : {support}, Location : {location}, Attendees : {attendees}, Description : {description}"
+            )
+        print(
+            """ 
+        1 - All Events
+        
+        2 - Create
+        3 - Filter
+
+        4 - Return Menu
+        """
+        )
+        return input("CHOICE : ")
 
 
 class FilterView:
