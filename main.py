@@ -1,4 +1,5 @@
 from controllers.controllers import (
+    CollaboratorController,
     MainController,
     SubmenuController,
     CustomerController,
@@ -20,6 +21,7 @@ routes = {
     "events_controller": SubmenuController.events_controller,
     "all_events_controller": EventController.all_events_controller,
     "your_events_controller": EventController.your_events_controller,
+    "all_collaborators_controller": CollaboratorController.all_collaborators,
     "create_controller": CRUDController.create_controller,
     "find_one_controller": SubmenuController.find_one_controller,
 }

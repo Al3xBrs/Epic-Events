@@ -5,22 +5,22 @@ def is_authenticated(user):
         return False
 
 
-def is_sale(user):
-    if user.role == "sale":
+def is_sale(role):
+    if role == "sale":
         return True
     else:
         return False
 
 
-def is_support(user):
-    if user.role == "support":
+def is_support(role):
+    if role == "support":
         return True
     else:
         return False
 
 
-def is_gesture(user):
-    if user.role == "gesture":
+def is_gesture(role):
+    if role == "gesture":
         return True
     else:
         return False

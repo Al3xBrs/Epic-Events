@@ -10,6 +10,7 @@ from .decorators import (
     update_decorator,
     delete_decorator,
     select_one_decorator,
+    collaborators_decorator,
 )
 
 
@@ -38,6 +39,24 @@ class ErrorView:
         print(
             """ 
         Please, use a correct choice. (Ex : 1,2,3, ...)
+        """
+        )
+
+    @error_decorator
+    @staticmethod
+    def role_error():
+        print(
+            """ 
+        You do not have permission.
+        """
+        )
+
+    @error_decorator
+    @staticmethod
+    def table_error():
+        print(
+            """
+        You cannot create on this table ...
         """
         )
 
@@ -292,6 +311,27 @@ class EventsView:
         return input("CHOICE : ")
 
 
+class CollaboratorsView:
+    @collaborators_decorator
+    @staticmethod
+    def all_collaborators(collaborators_list):
+        for collaborator in collaborators_list:
+            phone, email, username, role = collaborator
+            print(f"User : {username}, Email : {email}, Phone : {phone}, Role : {role}")
+
+        print(
+            """ 
+        1 - Update
+        2 - Create
+        
+        3 - Filter
+
+        4 - Return
+        """
+        )
+        return input("CHOICE : ")
+
+
 class FilterView:
     @filter_decorator
     @staticmethod
@@ -389,6 +429,8 @@ class CRUDView:
         end_date = input("END DATE : ")
         location = input("LOCATION : ")
         attendees = input("ATTENDEES : ")
+        role = input("ROLE (support, gesture or sale) : ")
+        password = input("PASSWORD (only for collaborator) : ")
 
         return (
             name,
@@ -402,6 +444,8 @@ class CRUDView:
             end_date,
             location,
             attendees,
+            role,
+            password,
         )
 
     @update_decorator

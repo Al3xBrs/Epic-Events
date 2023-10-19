@@ -95,3 +95,12 @@ def select_one_decorator(function):
         return result
 
     return func
+
+
+def collaborators_decorator(function):
+    def func(*args, **kwargs):
+        print("---------- COLLABORATORS ----------")
+        result = function(*args, **kwargs)
+        return result
+
+    return func

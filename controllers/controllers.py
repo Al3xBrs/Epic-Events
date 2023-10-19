@@ -12,6 +12,7 @@ from views.views import (
     SubmenuView,
     ErrorView,
     CustomersView,
+    CollaboratorsView,
 )
 from .permissions import (
     is_authenticated,
@@ -32,25 +33,28 @@ conn = psycopg2.connect(
 cur = conn.cursor()
 
 
+def decode_jws(token):
+    key = config("KEY")
+    result = jwt.decode(token, key, algorithms=["HS256"])
+    return result
+
+
 class MainController:
     """ """
 
     @classmethod
     def auth_controller(cls, payload):
         username, pwd = MainView.auth()
-        salt = bcrypt.gensalt()
-        hashed = bcrypt.hashpw(pwd.encode("utf-8"), salt)
-
         query = "SELECT username, password, role FROM collaborater WHERE username = %s"
         cur.execute(query, (username,))
         user = cur.fetchone()
 
         if user:
             stored_pwd = user[1]
-            if bcrypt.checkpw(hashed, stored_pwd.encode("utf-8")):
+            if bcrypt.checkpw(pwd.encode("UTF-8"), stored_pwd.encode("UTF-8")):
                 key = config("KEY")
                 token = jwt.encode(
-                    {"username": username, "role": user[2]}, key, algorithm="H256"
+                    {"username": user[0], "role": user[2]}, key, algorithm="HS256"
                 )
                 payload["token"] = token
                 return "menu_controller", payload
@@ -76,7 +80,7 @@ class MainController:
             return "events_controller", payload
 
         elif choice == "4":
-            return "collaborators_controller", payload
+            return "all_collaborators_controller", payload
 
         elif choice == "5":
             return "select_one_controller", payload
@@ -116,6 +120,7 @@ class SubmenuController:
         elif choice == "2":
             return "your_contracts_controller", payload
         elif choice == "3":
+            payload["table"] = "contract"
             return "create_controller", payload
         elif choice == "4":
             return "filter_controller", payload
@@ -182,31 +187,35 @@ class CustomerController:
 
     @classmethod
     def your_customers(cls, payload):
-        commercial_username = "TESTCOLL"
-        query = (
-            f"SELECT name, email, company FROM customer WHERE commercial_username = %s"
-        )
-        cur.execute(query, (commercial_username,))
-        customers_list = cur.fetchall()
-        payload["your_customers"] = customers_list
+        token = payload["token"]
+        role = decode_jws(token)["role"]
+        if is_sale(role) or is_gesture(role):
+            commercial_username = "TESTCOLL"
+            query = f"SELECT name, email, company FROM customer WHERE commercial_username = %s"
+            cur.execute(query, (commercial_username,))
+            customers_list = cur.fetchall()
+            payload["your_customers"] = customers_list
 
-        if customers_list:
-            choice = CustomersView.your_customers(customers_list)
-            if choice == "1":
-                return "all_customers_controller", payload
-            elif choice == "2":
-                return "create_controller", payload
-            elif choice == "3":
-                return "filter_controller", payload
-            elif choice == "4":
-                return "customers_controller", payload
+            if customers_list:
+                choice = CustomersView.your_customers(customers_list)
+                if choice == "1":
+                    return "all_customers_controller", payload
+                elif choice == "2":
+                    return "create_controller", payload
+                elif choice == "3":
+                    return "filter_controller", payload
+                elif choice == "4":
+                    return "customers_controller", payload
+                else:
+                    ErrorView.choice_error()
+                    return "your_customers_controller", payload
+
             else:
-                ErrorView.choice_error()
+                ErrorView.query_not_find()
                 return "your_customers_controller", payload
-
         else:
-            ErrorView.query_not_find()
-            return "your_customers_controller", payload
+            ErrorView.role_error()
+            return "customers_controller", payload
 
 
 class ContractController:
@@ -222,6 +231,7 @@ class ContractController:
             if choice == "1":
                 return "your_contracts_controller", payload
             if choice == "2":
+                payload["table"] = "contract"
                 return "create_controller", payload
             if choice == "3":
                 return "filter_controller", payload
@@ -312,6 +322,29 @@ class EventController:
             return "events_controller", payload
 
 
+class CollaboratorController:
+    @classmethod
+    def all_collaborators(cls, payload):
+        query = "SELECT phone, email, username, role FROM collaborater"
+        cur.execute(query)
+        collaborators_list = cur.fetchall()
+
+        choice = CollaboratorsView.all_collaborators(collaborators_list)
+
+        if choice == "1":
+            return "update_controller", payload
+        elif choice == "2":
+            payload["table"] = "collaborater"
+            return "create_controller", payload
+        elif choice == "3":
+            return "filter_controller", payload
+        elif choice == "4":
+            return "menu_controller", payload
+        else:
+            ErrorView.choice_error()
+            return "all_collaborators_controller", payload
+
+
 class CRUDController:
     @classmethod
     def create_controller(cls, payload):
@@ -327,13 +360,37 @@ class CRUDController:
             end_date,
             location,
             attendees,
+            role,
+            password,
         ) = CRUDView.create()
         id = uuid.uuid1()
         now = datetime.datetime.now()
         create_date = now.strftime("%m-%-d-%Y")
         update_date = now.strftime("%m-%d-%Y %H:%M:%S")
-        commercial_username = "TESTCOLL"
-        query = f"INSERT INTO customer (id, name, email, phone, company, create_date, update_date, commercial_username) VALUES ('{id}', '{name}', '{email}', {phone}, '{company}', '{create_date}', '{update_date}', '{commercial_username}') RETURNING *"
+        salt = bcrypt.gensalt()
+        pwd = bcrypt.hashpw(password.encode("UTF-8"), salt)
+        pwd_v = pwd.decode("UTF-8")
+        token = decode_jws(token=payload["token"])
+        commercial_username = token["username"]
+        table = payload["table"]
+        status = False
+        if table == "collaborater":
+            fields = "(id, phone, email, username, password, role)"
+            values = f"('{id}', {phone}, '{email}', '{name}', '{pwd_v}', '{role}')"
+        elif table == "contract":
+            fields = (
+                "(id, customer_name, commercial_username, price, create_date, status)"
+            )
+            values = f"('{id}', '{name}', '{sales_person}', {price}, '{create_date}', {status})"
+        elif table == "customer":
+            pass
+        elif table == "event":
+            pass
+        else:
+            ErrorView.table_error()
+            return "create_controller", payload
+        query = f"INSERT INTO {table} {fields} VALUES {values} RETURNING *"
+
         cur.execute(query)
         conn.commit()
         obj = cur.fetchone()
