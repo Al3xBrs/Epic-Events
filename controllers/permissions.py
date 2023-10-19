@@ -1,10 +1,3 @@
-def is_authenticated(user):
-    if user.authenticated:
-        return True
-    else:
-        return False
-
-
 def is_sale(role):
     if role == "sale":
         return True
@@ -21,6 +14,13 @@ def is_support(role):
 
 def is_gesture(role):
     if role == "gesture":
+        return True
+    else:
+        return False
+
+
+def is_sign(status):
+    if status:
         return True
     else:
         return False

@@ -15,10 +15,10 @@ from views.views import (
     CollaboratorsView,
 )
 from .permissions import (
-    is_authenticated,
     is_sale,
     is_support,
     is_gesture,
+    is_sign,
 )
 import bcrypt
 import jwt
@@ -96,13 +96,19 @@ class SubmenuController:
     @classmethod
     def customers_controller(cls, payload):
         choice = SubmenuView.customers()
-
+        token = decode_jws(payload["token"])
+        role = token["role"]
         if choice == "1":
             return "all_customers_controller", payload
         elif choice == "2":
             return "your_customers_controller", payload
         elif choice == "3":
-            return "create_controller", payload
+            if is_sale(role):
+                payload["table"] = "customer"
+                return "create_controller", payload
+            else:
+                ErrorView.role_error()
+                return "customers_controller", payload
         elif choice == "4":
             return "filter_controller", payload
         elif choice == "5":
@@ -114,14 +120,20 @@ class SubmenuController:
     @classmethod
     def contracts_controller(cls, payload):
         choice = SubmenuView.contracts()
+        token = decode_jws(payload["token"])
+        role = token["role"]
 
         if choice == "1":
             return "all_contracts_controller", payload
         elif choice == "2":
             return "your_contracts_controller", payload
         elif choice == "3":
-            payload["table"] = "contract"
-            return "create_controller", payload
+            if is_gesture(role):
+                payload["table"] = "contract"
+                return "create_controller", payload
+            else:
+                ErrorView.role_error()
+                return "contracts_controller", payload
         elif choice == "4":
             return "filter_controller", payload
         elif choice == "5":
@@ -133,13 +145,19 @@ class SubmenuController:
     @classmethod
     def events_controller(cls, payload):
         choice = SubmenuView.events()
-
+        token = decode_jws(payload["token"])
+        role = token["role"]
         if choice == "1":
             return "all_events_controller", payload
         elif choice == "2":
             return "your_events_controller", payload
         elif choice == "3":
-            return "create_controller", payload
+            if is_gesture(role):
+                payload["table"] = "event"
+                return "create_controller", payload
+            else:
+                ErrorView.role_error()
+                return "events_controller", payload
         elif choice == "4":
             return "filter_controller", payload
         elif choice == "5":
@@ -167,13 +185,20 @@ class CustomerController:
         cur.execute(query)
         customers_list = cur.fetchall()
         payload["customers_list"] = customers_list
+        token = decode_jws(payload["token"])
+        role = token["role"]
 
         if customers_list:
             choice = CustomersView.all_customers(customers_list)
             if choice == "1":
                 return "your_customers_controller", payload
             elif choice == "2":
-                return "create_controller", payload
+                if is_sale(role):
+                    payload["table"] = "customer"
+                    return "create_controller", payload
+                else:
+                    ErrorView.role_error()
+                    return "all_customers_controller", payload
             elif choice == "3":
                 return "filter_controller", payload
             elif choice == "4":
@@ -187,10 +212,10 @@ class CustomerController:
 
     @classmethod
     def your_customers(cls, payload):
-        token = payload["token"]
-        role = decode_jws(token)["role"]
+        token = decode_jws(payload["token"])
+        role = token["role"]
         if is_sale(role) or is_gesture(role):
-            commercial_username = "TESTCOLL"
+            commercial_username = token["username"]
             query = f"SELECT name, email, company FROM customer WHERE commercial_username = %s"
             cur.execute(query, (commercial_username,))
             customers_list = cur.fetchall()
@@ -201,6 +226,7 @@ class CustomerController:
                 if choice == "1":
                     return "all_customers_controller", payload
                 elif choice == "2":
+                    payload["table"] = "customer"
                     return "create_controller", payload
                 elif choice == "3":
                     return "filter_controller", payload
@@ -212,7 +238,7 @@ class CustomerController:
 
             else:
                 ErrorView.query_not_find()
-                return "your_customers_controller", payload
+                return "customers_controller", payload
         else:
             ErrorView.role_error()
             return "customers_controller", payload
@@ -225,14 +251,19 @@ class ContractController:
         cur.execute(query)
         contracts_list = cur.fetchall()
         payload["contracts_list"] = contracts_list
-
+        token = decode_jws(payload["token"])
+        role = token["role"]
         if contracts_list:
             choice = ContractsView.all_contracts(contracts_list)
             if choice == "1":
                 return "your_contracts_controller", payload
             if choice == "2":
-                payload["table"] = "contract"
-                return "create_controller", payload
+                if is_gesture(role):
+                    payload["table"] = "contract"
+                    return "create_controller", payload
+                else:
+                    ErrorView.role_error()
+                    return "all_contracts_controller", payload
             if choice == "3":
                 return "filter_controller", payload
             if choice == "4":
@@ -246,29 +277,33 @@ class ContractController:
 
     @classmethod
     def your_contracts_controller(cls, payload):
-        commercial_username = "TESTCOLL"
-        query = "SELECT customer_name, commercial_username, price, create_date, status FROM contract WHERE commercial_username = %s"
-        cur.execute(query, (commercial_username,))
-        contracts_list = cur.fetchall()
-        payload["your_contracts"] = contracts_list
+        token = decode_jws(payload["token"])
+        role = token["role"]
+        if is_gesture(role) or is_sale(role):
+            commercial_username = token["username"]
+            query = "SELECT customer_name, commercial_username, price, create_date, status FROM contract WHERE commercial_username = %s"
+            cur.execute(query, (commercial_username,))
+            contracts_list = cur.fetchall()
+            payload["your_contracts"] = contracts_list
 
-        if contracts_list:
-            choice = ContractsView.your_contracts(contracts_list)
-            if choice == "1":
-                return "all_contracts_controller", payload
-            elif choice == "2":
-                return "create_controller", payload
-            elif choice == "3":
-                return "filter_controller", payload
-            elif choice == "4":
-                return "contracts_controller", payload
+            if contracts_list:
+                choice = ContractsView.your_contracts(contracts_list)
+                if choice == "1":
+                    return "all_contracts_controller", payload
+                elif choice == "2":
+                    payload["table"] = "contract"
+                    return "create_controller", payload
+                elif choice == "3":
+                    return "filter_controller", payload
+                elif choice == "4":
+                    return "contracts_controller", payload
+                else:
+                    ErrorView.choice_error()
+                    return "your_contracts_controller", payload
+
             else:
-                ErrorView.choice_error()
-                return "your_contracts_controller", payload
-
-        else:
-            ErrorView.query_not_find()
-            return "your_contracts_controller", payload
+                ErrorView.query_not_find()
+                return "contracts_controller", payload
 
 
 class EventController:
@@ -284,6 +319,7 @@ class EventController:
             if choice == "1":
                 return "your_events_controller", payload
             elif choice == "2":
+                payload["table"] = "event"
                 return "create_controller", payload
             elif choice == "3":
                 return "filter_controller", payload
@@ -298,33 +334,42 @@ class EventController:
 
     @classmethod
     def your_events_controller(cls, payload):
-        commercial_username = "TESTCOLL"
-        query = "SELECT customer_name, start_date, end_date, support_username, location, attendees, description FROM event WHERE support_username = %s"
-        cur.execute(query, (commercial_username,))
-        events_list = cur.fetchall()
-        payload["events_list"] = events_list
+        token = decode_jws(payload["token"])
+        role = token["role"]
+        if is_support(role):
+            commercial_username = token["username"]
+            query = "SELECT customer_name, start_date, end_date, support_username, location, attendees, description FROM event WHERE support_username = %s"
+            cur.execute(query, (commercial_username,))
+            events_list = cur.fetchall()
+            payload["events_list"] = events_list
 
-        choice = EventsView.your_events(events_list)
-        if events_list:
-            if choice == "1":
-                return "all_events_controller", payload
-            elif choice == "2":
-                return "create_controller", payload
-            elif choice == "3":
-                return "filter_controller", payload
-            elif choice == "4":
-                return "events_controller", payload
+            choice = EventsView.your_events(events_list)
+            if events_list:
+                if choice == "1":
+                    return "all_events_controller", payload
+                elif choice == "2":
+                    payload["table"] = "event"
+                    return "create_controller", payload
+                elif choice == "3":
+                    return "filter_controller", payload
+                elif choice == "4":
+                    return "events_controller", payload
+                else:
+                    ErrorView.choice_error()
+                    return "all_events_controller", payload
             else:
-                ErrorView.choice_error()
-                return "all_events_controller", payload
+                ErrorView.query_not_find()
+                return "events_controller", payload
         else:
-            ErrorView.query_not_find()
+            ErrorView.role_error()
             return "events_controller", payload
 
 
 class CollaboratorController:
     @classmethod
     def all_collaborators(cls, payload):
+        token = decode_jws(payload["token"])
+        role = token["role"]
         query = "SELECT phone, email, username, role FROM collaborater"
         cur.execute(query)
         collaborators_list = cur.fetchall()
@@ -334,8 +379,12 @@ class CollaboratorController:
         if choice == "1":
             return "update_controller", payload
         elif choice == "2":
-            payload["table"] = "collaborater"
-            return "create_controller", payload
+            if is_gesture(role):
+                payload["table"] = "collaborater"
+                return "create_controller", payload
+            else:
+                ErrorView.role_error()
+                return "all_collaborators_controller", payload
         elif choice == "3":
             return "filter_controller", payload
         elif choice == "4":
@@ -360,6 +409,7 @@ class CRUDController:
             end_date,
             location,
             attendees,
+            description,
             role,
             password,
         ) = CRUDView.create()
@@ -382,20 +432,40 @@ class CRUDController:
                 "(id, customer_name, commercial_username, price, create_date, status)"
             )
             values = f"('{id}', '{name}', '{sales_person}', {price}, '{create_date}', {status})"
+
         elif table == "customer":
-            pass
+            fields = "(id, name, email, phone, company, created_date, updated_date, commercial_username)"
+            values = f"('{id}', '{name}', '{email}', {phone}, '{company}', '{create_date}', '{update_date}', '{commercial_username}')"
         elif table == "event":
-            pass
+            try:
+                query = f"SELECT status FROM contract WHERE id = '{contract_id}' AND status = True"
+                cur.execute(query)
+                contract_status = cur.fetchone()
+            except:
+                ErrorView.contract_id()
+                return "contracts_controller", payload
+            if contract_status:
+                fields = "(id, contract_id, customer_name, start_date, end_date, location, attendees, description)"
+                values = f"('{id}', '{contract_id}', '{name}', '{start_date}', '{end_date}', '{location}', '{attendees}', '{description}')"
+            else:
+                ErrorView.status()
+                return "contracts_controller", payload
         else:
             ErrorView.table_error()
             return "create_controller", payload
-        query = f"INSERT INTO {table} {fields} VALUES {values} RETURNING *"
 
-        cur.execute(query)
-        conn.commit()
-        obj = cur.fetchone()
-        payload["obj"] = obj
-        return "find_one_controller", payload
+        try:
+            query = f"INSERT INTO {table} {fields} VALUES {values} RETURNING *"
+
+            cur.execute(query)
+            conn.commit()
+            obj = cur.fetchone()
+            payload["obj"] = obj
+
+            return "find_one_controller", payload
+        except:
+            ErrorView.fields()
+            return "menu_controller", payload
 
     # TODO
     @classmethod

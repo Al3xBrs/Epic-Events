@@ -60,6 +60,33 @@ class ErrorView:
         """
         )
 
+    @error_decorator
+    @staticmethod
+    def status():
+        print(
+            """ 
+        The contract is not SIGN
+        """
+        )
+
+    @error_decorator
+    @staticmethod
+    def contract_id():
+        print(
+            """ 
+        This contract doesnt exist ...
+        """
+        )
+
+    @error_decorator
+    @staticmethod
+    def fields():
+        print(
+            """ 
+        One of the value was not supported, please try again ...
+        """
+        )
+
 
 class MainView:
     @log_decorator
@@ -429,6 +456,7 @@ class CRUDView:
         end_date = input("END DATE : ")
         location = input("LOCATION : ")
         attendees = input("ATTENDEES : ")
+        description = input("DESCRIPTION : ")
         role = input("ROLE (support, gesture or sale) : ")
         password = input("PASSWORD (only for collaborator) : ")
 
@@ -444,6 +472,7 @@ class CRUDView:
             end_date,
             location,
             attendees,
+            description,
             role,
             password,
         )
