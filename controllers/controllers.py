@@ -9,6 +9,7 @@ from views.views import (
     CRUDView,
     ContractsView,
     EventsView,
+    FilterView,
     MainView,
     SubmenuView,
     ErrorView,
@@ -182,7 +183,7 @@ class SubmenuController:
     def select_one_controller(cls, payload):
         table, information, value = SubmenuView.select_one()
         try:
-            if type(value) == string:
+            if isinstance(value, str):
                 query = f"SELECT * FROM {table} WHERE {information} = '{value}'"
                 cur.execute(query)
                 obj = cur.fetchone()
@@ -191,7 +192,7 @@ class SubmenuController:
                     payload["selected_one"] = obj
                     return "find_one_controller", payload
             else:
-                query = f"SELECT * FROM {table} WHERE {information} = '{value}'"
+                query = f"SELECT * FROM {table} WHERE {information} = {value}"
                 cur.execute(query)
                 obj = cur.fetchone()
                 if obj:
@@ -255,7 +256,7 @@ class CustomerController:
                     payload["table"] = "customer"
                     return "create_controller", payload
                 elif choice == "3":
-                    return "filter_controller", payload
+                    return "filter_customers_controller", payload
                 elif choice == "4":
                     return "customers_controller", payload
                 else:
@@ -268,6 +269,13 @@ class CustomerController:
         else:
             ErrorView.role_error()
             return "customers_controller", payload
+
+    @classmethod
+    def filter_customers_controller(cls, payload):
+        choice = FilterView.customers_filter()
+
+        if choice == "1":
+            pass
 
 
 class ContractController:
@@ -521,20 +529,30 @@ class CRUDController:
         obj = payload["selected_one"]
         to_update, new_update = CRUDView.update(obj)
         id = obj[0]
-
+        now = datetime.datetime.now()
+        update_date = now.strftime("%m-%-d-%Y")
         if obj:
-            if isinstance(new_update, str):
+            if isinstance(new_update, str) and table == "customer":
+                query = f"UPDATE {table} SET {to_update} = '{new_update}' AND update_date = '{update_date}' WHERE id = '{id}'"
+                cur.execute(query)
+                conn.commit()
+            elif isinstance(new_update, int) and table == "customer":
+                query = f"UPDATE {table} SET {to_update} = {new_update} AND update_date = '{update_date}' WHERE id = '{id}'"
+                cur.execute(query)
+                conn.commit()
+            elif isinstance(new_update, str) and table != "customer":
                 query = (
                     f"UPDATE {table} SET {to_update} = '{new_update}' WHERE id = '{id}'"
                 )
                 cur.execute(query)
-                conn.commit
+                conn.commit()
+
             else:
                 query = (
                     f"UPDATE {table} SET {to_update} = {new_update} WHERE id = '{id}'"
                 )
                 cur.execute(query)
-                conn.commit
+                conn.commit()
             return "menu_controller", payload
         else:
             ErrorView.fields()

@@ -451,7 +451,7 @@ class CRUDView:
 
         Customer (m): name, email, phone, company, sales_person
         Contract (m): name, sales_person, price
-        Event (m): contract_id, name, start_date, end_date, location, attendees
+        Event (m): name, contract_id, start_date, end_date, location, attendees
         """
         )
         name = input("NAME : ")
