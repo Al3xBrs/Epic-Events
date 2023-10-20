@@ -83,7 +83,16 @@ class ErrorView:
     def fields():
         print(
             """ 
-        One of the value was not supported, please try again ...
+        One of the value was not found, please try again ...
+        """
+        )
+
+    @error_decorator
+    @staticmethod
+    def yn():
+        print(
+            """ 
+        Please, select Y or N. 
         """
         )
 
@@ -174,14 +183,14 @@ class SubmenuView:
     def select_one():
         print(
             """ 
-        Choose the object to find, THEN, the information, THEN, the value
+        Choose the table to find, THEN, the information, THEN, the value
         """
         )
-        obj = input("SELECT THE OBJECT (customer, contract or event) : ")
-        information = input("SELECT THE INFORMATION (ex : name) : ")
+        table = input("SELECT THE TABLE(customer, contract, event or collaborater) : ")
+        information = input("SELECT THE INFORMATION (name) : ")
         value = input("TYPE THE VALUE (ex : Alex) : ")
 
-        return obj, information, value
+        return table, information, value
 
     @customers_decorator
     @staticmethod

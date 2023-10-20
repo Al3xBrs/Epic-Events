@@ -1,6 +1,7 @@
 import datetime
 from email.policy import default
 from pydoc import cli
+import string
 import uuid
 import psycopg2
 from decouple import config
@@ -168,7 +169,7 @@ class SubmenuController:
 
     @classmethod
     def find_one_controller(cls, payload):
-        obj = payload["obj"]
+        obj = payload["selected_one"]
         choice = SubmenuView.find_one(obj)
         if choice == "1":
             return "update_controller", payload
@@ -176,6 +177,31 @@ class SubmenuController:
             return "delete_controller", payload
         elif choice == "3":
             return "menu_controller", payload
+
+    @classmethod
+    def select_one_controller(cls, payload):
+        table, information, value = SubmenuView.select_one()
+        try:
+            if type(value) == string:
+                query = f"SELECT * FROM {table} WHERE {information} = '{value}'"
+                cur.execute(query)
+                obj = cur.fetchone()
+                if obj:
+                    payload["table"] = table
+                    payload["selected_one"] = obj
+                    return "find_one_controller", payload
+            else:
+                query = f"SELECT * FROM {table} WHERE {information} = '{value}'"
+                cur.execute(query)
+                obj = cur.fetchone()
+                if obj:
+                    payload["table"] = table
+                    payload["selected_one"] = obj
+                    return "find_one_controller", payload
+
+        except:
+            ErrorView.fields()
+            return "select_one_controller", payload
 
 
 class CustomerController:
@@ -467,12 +493,49 @@ class CRUDController:
             ErrorView.fields()
             return "menu_controller", payload
 
-    # TODO
     @classmethod
     def delete_controller(cls, payload):
-        pass
+        obj = payload["selected_one"]
+        table = payload["table"]
+        choice = CRUDView.delete(obj)
 
-    # TODO
+        if choice == "Y" or "y":
+            id = obj[0]
+            query = f"DELETE FROM {table} WHERE id = '{id}'"
+            cur.execute(query)
+            conn.commit()
+            del payload["selected_one"]
+            del payload["table"]
+            return "menu_controller", payload
+
+        elif choice == "N" or "n":
+            return "find_one_controller", payload
+
+        else:
+            ErrorView.yn()
+            return "delete_controller", payload
+
     @classmethod
     def update_controller(cls, payload):
-        pass
+        table = payload["table"]
+        obj = payload["selected_one"]
+        to_update, new_update = CRUDView.update(obj)
+        id = obj[0]
+
+        if obj:
+            if isinstance(new_update, str):
+                query = (
+                    f"UPDATE {table} SET {to_update} = '{new_update}' WHERE id = '{id}'"
+                )
+                cur.execute(query)
+                conn.commit
+            else:
+                query = (
+                    f"UPDATE {table} SET {to_update} = {new_update} WHERE id = '{id}'"
+                )
+                cur.execute(query)
+                conn.commit
+            return "menu_controller", payload
+        else:
+            ErrorView.fields()
+            return "update_controller", payload

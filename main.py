@@ -23,6 +23,9 @@ routes = {
     "your_events_controller": EventController.your_events_controller,
     "all_collaborators_controller": CollaboratorController.all_collaborators,
     "create_controller": CRUDController.create_controller,
+    "update_controller": CRUDController.update_controller,
+    "delete_controller": CRUDController.delete_controller,
+    "select_one_controller": SubmenuController.select_one_controller,
     "find_one_controller": SubmenuController.find_one_controller,
 }
 
