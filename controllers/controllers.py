@@ -261,13 +261,15 @@ class CustomerController:
     def your_customers(cls, payload):
         token = decode_jws(payload["token"])
         role = token["role"]
-        if is_sale(role) or is_gesture(role):
+        if "filter_list" in payload:
+            customers_list = payload["filter_list"]
+        else:
             commercial_username = token["username"]
             query = f"SELECT name, email, company FROM customer WHERE commercial_username = %s"
             cur.execute(query, (commercial_username,))
             customers_list = cur.fetchall()
-            payload["your_customers"] = customers_list
 
+        if is_sale(role) or is_gesture(role):
             if customers_list:
                 choice = CustomersView.your_customers(customers_list)
                 if choice == "1":
@@ -648,7 +650,7 @@ class FilterController:
                 cur.execute(query)
                 customers_list = cur.fetchall()
                 if customers_list:
-                    payload["customers_list"] = customers_list
+                    payload["filter_list"] = customers_list
                     return "your_customers_controller", payload
 
             ErrorView.query_not_find()
