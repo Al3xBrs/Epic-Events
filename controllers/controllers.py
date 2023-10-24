@@ -1,5 +1,6 @@
 import datetime
 from email.policy import default
+from genericpath import exists
 from pydoc import cli
 import string
 import uuid
@@ -112,6 +113,9 @@ class SubmenuController:
                 ErrorView.role_error()
                 return "customers_controller", payload
         elif choice == "4":
+            payload["table"] = "customer"
+            payload["all_your"] = "all"
+            payload["fields"] = "name, email, company"
             return "filter_controller", payload
         elif choice == "5":
             return "menu_controller", payload
@@ -137,6 +141,11 @@ class SubmenuController:
                 ErrorView.role_error()
                 return "contracts_controller", payload
         elif choice == "4":
+            payload["table"] = "contract"
+            payload["all_your"] = "all"
+            payload[
+                "fields"
+            ] = "customer_name, commercial_username, price, create_date, status"
             return "filter_controller", payload
         elif choice == "5":
             return "menu_controller", payload
@@ -161,6 +170,11 @@ class SubmenuController:
                 ErrorView.role_error()
                 return "events_controller", payload
         elif choice == "4":
+            payload["table"] = "event"
+            payload["all_your"] = "all"
+            payload[
+                "fields"
+            ] = "customer_name, start_date, end_date, support_username, location, attendees, description"
             return "filter_controller", payload
         elif choice == "5":
             return "menu_controller", payload
@@ -170,7 +184,7 @@ class SubmenuController:
 
     @classmethod
     def find_one_controller(cls, payload):
-        obj = payload["selected_one"]
+        obj = payload["obj"]
         choice = SubmenuView.find_one(obj)
         if choice == "1":
             return "update_controller", payload
@@ -189,7 +203,7 @@ class SubmenuController:
                 obj = cur.fetchone()
                 if obj:
                     payload["table"] = table
-                    payload["selected_one"] = obj
+                    payload["obj"] = obj
                     return "find_one_controller", payload
             else:
                 query = f"SELECT * FROM {table} WHERE {information} = {value}"
@@ -197,7 +211,7 @@ class SubmenuController:
                 obj = cur.fetchone()
                 if obj:
                     payload["table"] = table
-                    payload["selected_one"] = obj
+                    payload["obj"] = obj
                     return "find_one_controller", payload
 
         except:
@@ -208,10 +222,13 @@ class SubmenuController:
 class CustomerController:
     @classmethod
     def all_customers_controller(cls, payload):
-        query = "SELECT name, email, company FROM customer"
-        cur.execute(query)
-        customers_list = cur.fetchall()
-        payload["customers_list"] = customers_list
+        if "filter_list" in payload:
+            customers_list = payload["filter_list"]
+        else:
+            query = "SELECT name, email, company FROM customer"
+            cur.execute(query)
+            customers_list = cur.fetchall()
+
         token = decode_jws(payload["token"])
         role = token["role"]
 
@@ -227,6 +244,9 @@ class CustomerController:
                     ErrorView.role_error()
                     return "all_customers_controller", payload
             elif choice == "3":
+                payload["table"] = "customer"
+                payload["all_your"] = "all"
+                payload["fields"] = "name, email, company"
                 return "filter_controller", payload
             elif choice == "4":
                 return "customers_controller", payload
@@ -256,7 +276,10 @@ class CustomerController:
                     payload["table"] = "customer"
                     return "create_controller", payload
                 elif choice == "3":
-                    return "filter_customers_controller", payload
+                    payload["table"] = "customer"
+                    payload["all_your"] = "your"
+                    payload["fields"] = "name, email, company"
+                    return "filter_controller", payload
                 elif choice == "4":
                     return "customers_controller", payload
                 else:
@@ -269,13 +292,6 @@ class CustomerController:
         else:
             ErrorView.role_error()
             return "customers_controller", payload
-
-    @classmethod
-    def filter_customers_controller(cls, payload):
-        choice = FilterView.customers_filter()
-
-        if choice == "1":
-            pass
 
 
 class ContractController:
@@ -299,6 +315,11 @@ class ContractController:
                     ErrorView.role_error()
                     return "all_contracts_controller", payload
             if choice == "3":
+                payload["table"] = "contract"
+                payload["all_your"] = "all"
+                payload[
+                    "fields"
+                ] = "customer_name, commercial_username, price, create_date, status"
                 return "filter_controller", payload
             if choice == "4":
                 return "contracts_controller", payload
@@ -328,6 +349,11 @@ class ContractController:
                     payload["table"] = "contract"
                     return "create_controller", payload
                 elif choice == "3":
+                    payload["table"] = "contract"
+                    payload["all_your"] = "your"
+                    payload[
+                        "fields"
+                    ] = "customer_name, commercial_username, price, create_date, status"
                     return "filter_controller", payload
                 elif choice == "4":
                     return "contracts_controller", payload
@@ -356,6 +382,11 @@ class EventController:
                 payload["table"] = "event"
                 return "create_controller", payload
             elif choice == "3":
+                payload["table"] = "event"
+                payload["all_your"] = "all"
+                payload[
+                    "fields"
+                ] = "customer_name, start_date, end_date, support_username, location, attendees, description"
                 return "filter_controller", payload
             elif choice == "4":
                 return "events_controller", payload
@@ -385,6 +416,11 @@ class EventController:
                     payload["table"] = "event"
                     return "create_controller", payload
                 elif choice == "3":
+                    payload["table"] = "event"
+                    payload["all_your"] = "your"
+                    payload[
+                        "fields"
+                    ] = "customer_name, start_date, end_date, support_username, location, attendees, description"
                     return "filter_controller", payload
                 elif choice == "4":
                     return "events_controller", payload
@@ -420,6 +456,9 @@ class CollaboratorController:
                 ErrorView.role_error()
                 return "all_collaborators_controller", payload
         elif choice == "3":
+            payload["table"] = "collaborater"
+            payload["all_your"] = "all"
+            payload["fields"] = "phone, email, username, role"
             return "filter_controller", payload
         elif choice == "4":
             return "menu_controller", payload
@@ -468,7 +507,7 @@ class CRUDController:
             values = f"('{id}', '{name}', '{sales_person}', {price}, '{create_date}', {status})"
 
         elif table == "customer":
-            fields = "(id, name, email, phone, company, created_date, updated_date, commercial_username)"
+            fields = "(id, name, email, phone, company, create_date, update_date, commercial_username)"
             values = f"('{id}', '{name}', '{email}', {phone}, '{company}', '{create_date}', '{update_date}', '{commercial_username}')"
         elif table == "event":
             try:
@@ -488,18 +527,17 @@ class CRUDController:
             ErrorView.table_error()
             return "create_controller", payload
 
-        try:
-            query = f"INSERT INTO {table} {fields} VALUES {values} RETURNING *"
+        query = f"INSERT INTO {table} {fields} VALUES {values} RETURNING *"
 
-            cur.execute(query)
-            conn.commit()
-            obj = cur.fetchone()
-            payload["obj"] = obj
+        cur.execute(query)
+        conn.commit()
+        obj = cur.fetchone()
+        payload["obj"] = obj
 
-            return "find_one_controller", payload
-        except:
-            ErrorView.fields()
-            return "menu_controller", payload
+        return "find_one_controller", payload
+
+        ErrorView.fields()
+        return "menu_controller", payload
 
     @classmethod
     def delete_controller(cls, payload):
@@ -533,11 +571,11 @@ class CRUDController:
         update_date = now.strftime("%m-%-d-%Y")
         if obj:
             if isinstance(new_update, str) and table == "customer":
-                query = f"UPDATE {table} SET {to_update} = '{new_update}' AND update_date = '{update_date}' WHERE id = '{id}'"
+                query = f"UPDATE {table} SET {to_update} = '{new_update}', update_date = '{update_date}' WHERE id = '{id}'"
                 cur.execute(query)
                 conn.commit()
             elif isinstance(new_update, int) and table == "customer":
-                query = f"UPDATE {table} SET {to_update} = {new_update} AND update_date = '{update_date}' WHERE id = '{id}'"
+                query = f"UPDATE {table} SET {to_update} = {new_update}, update_date = '{update_date}' WHERE id = '{id}'"
                 cur.execute(query)
                 conn.commit()
             elif isinstance(new_update, str) and table != "customer":
@@ -557,3 +595,61 @@ class CRUDController:
         else:
             ErrorView.fields()
             return "update_controller", payload
+
+
+class FilterController:
+    @classmethod
+    def filter_controller(cls, payload):
+        table = payload["table"]
+        all_your = payload["all_your"]
+        fields = payload["fields"]
+        token = decode_jws(payload["token"])
+        collaborator = token["username"]
+        order = None
+        if table == "customer":
+            choice = FilterView.customers_filter()
+
+            if choice == "1":
+                order = "name"
+
+            elif choice == "2":
+                order = "company"
+
+            elif choice == "3":
+                order = "create_date ASC"
+
+            elif choice == "4":
+                order = "create_date DESC"
+
+            elif choice == "5":
+                order = "update_date ASC"
+
+            elif choice == "6":
+                order = "update_date DESC"
+
+            elif choice == "7":
+                order = "commercial_username"
+
+            else:
+                ErrorView.choice_error()
+                return "filter_controller", payload
+
+            if order is not None and all_your == "all":
+                query = f"SELECT {fields} FROM {table} ORDER BY {order}"
+                cur.execute(query)
+                customers_list = cur.fetchall()
+                print("cus : ", customers_list)
+                if customers_list:
+                    payload["filter_list"] = customers_list
+                    return "all_customers_controller", payload
+
+            elif order is not None and all_your == "your":
+                query = f"SELECT {fields} FROM {table} WHERE commercial_username = '{collaborator}' ORDER BY {order}"
+                cur.execute(query)
+                customers_list = cur.fetchall()
+                if customers_list:
+                    payload["customers_list"] = customers_list
+                    return "your_customers_controller", payload
+
+            ErrorView.query_not_find()
+            return "customers_controller", payload

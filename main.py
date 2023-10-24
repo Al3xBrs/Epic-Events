@@ -6,6 +6,7 @@ from controllers.controllers import (
     CRUDController,
     ContractController,
     EventController,
+    FilterController,
 )
 
 
@@ -27,6 +28,7 @@ routes = {
     "delete_controller": CRUDController.delete_controller,
     "select_one_controller": SubmenuController.select_one_controller,
     "find_one_controller": SubmenuController.find_one_controller,
+    "filter_controller": FilterController.filter_controller,
 }
 
 
