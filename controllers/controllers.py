@@ -224,6 +224,7 @@ class CustomerController:
     def all_customers_controller(cls, payload):
         if "filter_list" in payload:
             customers_list = payload["filter_list"]
+            del payload["filter_list"]
         else:
             query = "SELECT name, email, company FROM customer"
             cur.execute(query)
@@ -263,6 +264,7 @@ class CustomerController:
         role = token["role"]
         if "filter_list" in payload:
             customers_list = payload["filter_list"]
+            del payload["filter_list"]
         else:
             commercial_username = token["username"]
             query = f"SELECT name, email, company FROM customer WHERE commercial_username = %s"
@@ -299,10 +301,14 @@ class CustomerController:
 class ContractController:
     @classmethod
     def all_contracts_controller(cls, payload):
-        query = "SELECT customer_name, commercial_username, price, create_date, status FROM contract"
-        cur.execute(query)
-        contracts_list = cur.fetchall()
-        payload["contracts_list"] = contracts_list
+        if "filter_list" in payload:
+            contracts_list = payload["filter_list"]
+            del payload["filter_list"]
+        else:
+            query = "SELECT customer_name, commercial_username, price, create_date, status FROM contract"
+            cur.execute(query)
+            contracts_list = cur.fetchall()
+
         token = decode_jws(payload["token"])
         role = token["role"]
         if contracts_list:
@@ -338,10 +344,14 @@ class ContractController:
         role = token["role"]
         if is_gesture(role) or is_sale(role):
             commercial_username = token["username"]
-            query = "SELECT customer_name, commercial_username, price, create_date, status FROM contract WHERE commercial_username = %s"
-            cur.execute(query, (commercial_username,))
-            contracts_list = cur.fetchall()
-            payload["your_contracts"] = contracts_list
+            if "filter_list" in payload:
+                contracts_list = payload["filter_list"]
+                del payload["filter_list"]
+
+            else:
+                query = "SELECT customer_name, commercial_username, price, create_date, status FROM contract WHERE commercial_username = %s"
+                cur.execute(query, (commercial_username,))
+                contracts_list = cur.fetchall()
 
             if contracts_list:
                 choice = ContractsView.your_contracts(contracts_list)
@@ -371,10 +381,13 @@ class ContractController:
 class EventController:
     @classmethod
     def all_events_controller(cls, payload):
-        query = "SELECT customer_name, start_date, end_date, support_username, location, attendees, description FROM event"
-        cur.execute(query)
-        events_list = cur.fetchall()
-        payload["events_list"] = events_list
+        if "filter_list" in payload:
+            events_list = payload["filter_list"]
+            del payload["filter_list"]
+        else:
+            query = "SELECT customer_name, start_date, end_date, support_username, location, attendees, description FROM event"
+            cur.execute(query)
+            events_list = cur.fetchall()
 
         choice = EventsView.all_events(events_list)
         if events_list:
@@ -403,12 +416,16 @@ class EventController:
     def your_events_controller(cls, payload):
         token = decode_jws(payload["token"])
         role = token["role"]
+
         if is_support(role):
             commercial_username = token["username"]
-            query = "SELECT customer_name, start_date, end_date, support_username, location, attendees, description FROM event WHERE support_username = %s"
-            cur.execute(query, (commercial_username,))
-            events_list = cur.fetchall()
-            payload["events_list"] = events_list
+            if "filter_list" in payload:
+                events_list = payload["filter_list"]
+                del payload["filter_list"]
+            else:
+                query = "SELECT customer_name, start_date, end_date, support_username, location, attendees, description FROM event WHERE support_username = %s"
+                cur.execute(query, (commercial_username,))
+                events_list = cur.fetchall()
 
             choice = EventsView.your_events(events_list)
             if events_list:
@@ -442,9 +459,13 @@ class CollaboratorController:
     def all_collaborators(cls, payload):
         token = decode_jws(payload["token"])
         role = token["role"]
-        query = "SELECT phone, email, username, role FROM collaborater"
-        cur.execute(query)
-        collaborators_list = cur.fetchall()
+        if "filter_list" in payload:
+            collaborators_list = payload["filter_list"]
+            del payload["filter_list"]
+        else:
+            query = "SELECT phone, email, username, role FROM collaborater"
+            cur.execute(query)
+            collaborators_list = cur.fetchall()
 
         choice = CollaboratorsView.all_collaborators(collaborators_list)
 
@@ -543,7 +564,7 @@ class CRUDController:
 
     @classmethod
     def delete_controller(cls, payload):
-        obj = payload["selected_one"]
+        obj = payload["obj"]
         table = payload["table"]
         choice = CRUDView.delete(obj)
 
@@ -552,7 +573,7 @@ class CRUDController:
             query = f"DELETE FROM {table} WHERE id = '{id}'"
             cur.execute(query)
             conn.commit()
-            del payload["selected_one"]
+            del payload["obj"]
             del payload["table"]
             return "menu_controller", payload
 
@@ -566,7 +587,7 @@ class CRUDController:
     @classmethod
     def update_controller(cls, payload):
         table = payload["table"]
-        obj = payload["selected_one"]
+        obj = payload["obj"]
         to_update, new_update = CRUDView.update(obj)
         id = obj[0]
         now = datetime.datetime.now()
@@ -640,7 +661,7 @@ class FilterController:
                 query = f"SELECT {fields} FROM {table} ORDER BY {order}"
                 cur.execute(query)
                 customers_list = cur.fetchall()
-                print("cus : ", customers_list)
+
                 if customers_list:
                     payload["filter_list"] = customers_list
                     return "all_customers_controller", payload
@@ -655,3 +676,127 @@ class FilterController:
 
             ErrorView.query_not_find()
             return "customers_controller", payload
+        if table == "contract":
+            choice = FilterView.contracts_filter()
+
+            if choice == "1":
+                order = "customer_name"
+
+            elif choice == "2":
+                order = "commercial_username"
+
+            elif choice == "3":
+                order = "price DESC"
+
+            elif choice == "4":
+                order = "price ASC"
+
+            elif choice == "5":
+                order = "create_date DESC"
+
+            elif choice == "6":
+                order = "create_date ASC"
+
+            elif choice == "7":
+                order = "status DESC"
+
+            elif choice == "8":
+                order = "status ASC"
+
+            else:
+                ErrorView.choice_error()
+                return "contracts_controller", payload
+
+            if order is not None and all_your == "all":
+                query = f"SELECT {fields} FROM {table} ORDER BY {order}"
+                cur.execute(query)
+                contracts_list = cur.fetchall()
+
+                if contracts_list:
+                    payload["filter_list"] = contracts_list
+                    return "all_contracts_controller", payload
+
+            elif order is not None and all_your == "your":
+                query = f"SELECT {fields} FROM {table} WHERE commercial_username = '{collaborator}' ORDER BY {order}"
+                cur.execute(query)
+                contracts_list = cur.fetchall()
+                if contracts_list:
+                    payload["filter_list"] = contracts_list
+                    return "your_contracts_controller", payload
+
+            ErrorView.query_not_find()
+            return "contracts_controller", payload
+        if table == "event":
+            choice = FilterView.events_filter()
+
+            if choice == "1":
+                order = "customer_name"
+
+            elif choice == "2":
+                order = "support_username"
+
+            elif choice == "3":
+                order = "start_date DESC"
+
+            elif choice == "4":
+                order = "start_date ASC"
+
+            elif choice == "5":
+                order = "end_date DESC"
+
+            elif choice == "6":
+                order = "end_date ASC"
+
+            elif choice == "7":
+                order = "attendees DESC"
+
+            elif choice == "8":
+                order = "attendees ASC"
+
+            else:
+                ErrorView.choice_error()
+                return "events_controller", payload
+
+            if order is not None and all_your == "all":
+                query = f"SELECT {fields} FROM {table} ORDER BY {order}"
+                cur.execute(query)
+                events_list = cur.fetchall()
+
+                if events_list:
+                    payload["filter_list"] = events_list
+                    return "all_events_controller", payload
+
+            elif order is not None and all_your == "your":
+                query = f"SELECT {fields} FROM {table} WHERE commercial_username = '{collaborator}' ORDER BY {order}"
+                cur.execute(query)
+                events_list = cur.fetchall()
+                if events_list:
+                    payload["filter_list"] = events_list
+                    return "your_events_controller", payload
+
+            ErrorView.query_not_find()
+            return "events_controller", payload
+        if table == "collaborater":
+            choice = FilterView.collaborators_filter()
+
+            if choice == "1":
+                order = "username"
+
+            elif choice == "2":
+                order = "role"
+
+            else:
+                ErrorView.choice_error()
+                return "collaborators_controller", payload
+
+            if order is not None:
+                query = f"SELECT {fields} FROM {table} ORDER BY {order}"
+                cur.execute(query)
+                collaboraters_list = cur.fetchall()
+
+                if collaboraters_list:
+                    payload["filter_list"] = collaboraters_list
+                    return "all_collaborators_controller", payload
+
+            ErrorView.query_not_find()
+            return "collaborators_controller", payload
