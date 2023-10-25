@@ -8,7 +8,13 @@ from controllers.controllers import (
     EventController,
     FilterController,
 )
+import sentry_sdk
 
+sentry_sdk.init(
+    dsn="https://a7f2a2b3bf9f05b0dd53b3d198640b13@o4506111748276224.ingest.sentry.io/4506111751815168",
+    traces_sample_rate=1.0,
+    profiles_sample_rate=1.0,
+)
 
 routes = {
     "auth_controller": MainController.auth_controller,
