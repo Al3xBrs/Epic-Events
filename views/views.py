@@ -89,6 +89,15 @@ class ErrorView:
 
     @error_decorator
     @staticmethod
+    def no_obj():
+        print(
+            """ 
+        You have to select one entity before to update.
+        """
+        )
+
+    @error_decorator
+    @staticmethod
     def yn():
         print(
             """ 
@@ -250,10 +259,17 @@ class ContractsView:
     @staticmethod
     def all_contracts(contracts_list):
         for contract in contracts_list:
-            customer_name, commercial_username, price, create_date, status = contract
+            (
+                id,
+                customer_name,
+                commercial_username,
+                price,
+                create_date,
+                status,
+            ) = contract
             formatted_date = create_date.strftime("%Y-%m-%d")
             print(
-                f"Customer Name: {customer_name}, Commercial Username: {commercial_username}, Price: {price}, Create Date: {formatted_date}, Status: {status}"
+                f"Id : {id}, Customer Name: {customer_name}, Commercial Username: {commercial_username}, Price: {price}, Create Date: {formatted_date}, Status: {status}"
             )
         print(
             """ 
@@ -271,10 +287,17 @@ class ContractsView:
     @staticmethod
     def your_contracts(contracts_list):
         for contract in contracts_list:
-            customer_name, commercial_username, price, create_date, status = contract
+            (
+                id,
+                customer_name,
+                commercial_username,
+                price,
+                create_date,
+                status,
+            ) = contract
             formatted_date = create_date.strftime("%Y-%m-%d")
             print(
-                f"Customer Name: {customer_name}, Commercial Username: {commercial_username}, Price: {price}, Create Date: {formatted_date}, Status: {status}"
+                f"Id : {id}, Customer Name: {customer_name}, Commercial Username: {commercial_username}, Price: {price}, Create Date: {formatted_date}, Status: {status}"
             )
         print(
             """ 

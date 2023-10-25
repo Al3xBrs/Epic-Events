@@ -6,6 +6,7 @@ import string
 import uuid
 import psycopg2
 from decouple import config
+import sentry_sdk
 from views.views import (
     CRUDView,
     ContractsView,
@@ -145,7 +146,7 @@ class SubmenuController:
             payload["all_your"] = "all"
             payload[
                 "fields"
-            ] = "customer_name, commercial_username, price, create_date, status"
+            ] = "id, customer_name, commercial_username, price, create_date, status"
             return "filter_controller", payload
         elif choice == "5":
             return "menu_controller", payload
@@ -214,7 +215,8 @@ class SubmenuController:
                     payload["obj"] = obj
                     return "find_one_controller", payload
 
-        except:
+        except Exception as e:
+            sentry_sdk.capture_exception(e)
             ErrorView.fields()
             return "select_one_controller", payload
 
@@ -305,7 +307,7 @@ class ContractController:
             contracts_list = payload["filter_list"]
             del payload["filter_list"]
         else:
-            query = "SELECT customer_name, commercial_username, price, create_date, status FROM contract"
+            query = "SELECT id, customer_name, commercial_username, price, create_date, status FROM contract"
             cur.execute(query)
             contracts_list = cur.fetchall()
 
@@ -327,7 +329,7 @@ class ContractController:
                 payload["all_your"] = "all"
                 payload[
                     "fields"
-                ] = "customer_name, commercial_username, price, create_date, status"
+                ] = "id, customer_name, commercial_username, price, create_date, status"
                 return "filter_controller", payload
             if choice == "4":
                 return "contracts_controller", payload
@@ -349,7 +351,7 @@ class ContractController:
                 del payload["filter_list"]
 
             else:
-                query = "SELECT customer_name, commercial_username, price, create_date, status FROM contract WHERE commercial_username = %s"
+                query = "SELECT id, customer_name, commercial_username, price, create_date, status FROM contract WHERE commercial_username = %s"
                 cur.execute(query, (commercial_username,))
                 contracts_list = cur.fetchall()
 
@@ -365,7 +367,7 @@ class ContractController:
                     payload["all_your"] = "your"
                     payload[
                         "fields"
-                    ] = "customer_name, commercial_username, price, create_date, status"
+                    ] = "id, customer_name, commercial_username, price, create_date, status"
                     return "filter_controller", payload
                 elif choice == "4":
                     return "contracts_controller", payload
@@ -470,7 +472,11 @@ class CollaboratorController:
         choice = CollaboratorsView.all_collaborators(collaborators_list)
 
         if choice == "1":
-            return "update_controller", payload
+            if "obj" in payload:
+                return "update_controller", payload
+            else:
+                ErrorView.no_obj()
+                return "menu_controller", payload
         elif choice == "2":
             if is_gesture(role):
                 payload["table"] = "collaborater"
@@ -537,7 +543,8 @@ class CRUDController:
                 query = f"SELECT status FROM contract WHERE id = '{contract_id}' AND status = True"
                 cur.execute(query)
                 contract_status = cur.fetchone()
-            except:
+            except Exception as e:
+                sentry_sdk.capture_exception(e)
                 ErrorView.contract_id()
                 return "contracts_controller", payload
             if contract_status:
@@ -557,10 +564,13 @@ class CRUDController:
         obj = cur.fetchone()
         payload["obj"] = obj
 
+        creation_event = {
+            "event_id": f"{uuid.uuid4()}",
+            "message": "Création d'une entité",
+            "extra": {"table": f"{table}", "id": f"{id}"},
+        }
+        sentry_sdk.capture_event(creation_event)
         return "find_one_controller", payload
-
-        ErrorView.fields()
-        return "menu_controller", payload
 
     @classmethod
     def delete_controller(cls, payload):
@@ -575,6 +585,12 @@ class CRUDController:
             conn.commit()
             del payload["obj"]
             del payload["table"]
+            del_event = {
+                "event_id": f"{uuid.uuid4()}",
+                "message": "Suppression d'une entité",
+                "extra": {"table": f"{table}", "id": f"{id}"},
+            }
+            sentry_sdk.capture_event(del_event)
             return "menu_controller", payload
 
         elif choice == "N" or "n":
@@ -614,6 +630,26 @@ class CRUDController:
                 )
                 cur.execute(query)
                 conn.commit()
+
+            if to_update == "status" and new_update == "True":
+                sign_event = {
+                    "event_id": f"{uuid.uuid4()}",
+                    "message": "Nouveau contract signé.",
+                    "extra": {
+                        "table": f"{table}",
+                        "id": f"{id}",
+                        "customer": f"{obj[1]}",
+                    },
+                }
+                sentry_sdk.capture_event(sign_event)
+
+            else:
+                update_event = {
+                    "event_id": f"{uuid.uuid4()}",
+                    "message": "Mise à jour d'une entité",
+                    "extra": {"table": f"{table}", "id": f"{id}"},
+                }
+                sentry_sdk.capture_event(update_event)
             return "menu_controller", payload
         else:
             ErrorView.fields()
