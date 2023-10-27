@@ -30,12 +30,12 @@ Follow these links to install them :
 3. When everything is ok, you have to create **.env** file in which you'll put the ***database informations*** and a ***secret key*** to allow JWS Token. 
     - E.g. : 
             
->DB_USER=root
->DB_PASSWORD=password
->DB_HOST=localhost
->DB_PORT=5432
->DB_NAME=postgres
->KEY=secrettoken102023
+>DB_USER=root  
+>DB_PASSWORD=password  
+>DB_HOST=localhost  
+>DB_PORT=5432  
+>DB_NAME=postgres  
+>KEY=secrettoken102023  
 
 You can eventually add a Sentry DNS by adding
 >DNS=***your_dns***
@@ -88,20 +88,20 @@ Now, you can finally enter the project by typing `$ python main.py` and loggin w
 
 >There is only one view to create any of the entity you want. You just have to type mandatories informations. 
 >*E.g. (for a collaborater):* 
->NAME: **COLLABORATER1**
->EMAIL: **test@test.fr**
->PHONE: **0555555555**
->COMPANY: 
->SALES PERSON: 
->PRICE: 
->CONTRACT ID:
->START DATE:
->END DATE:
->LOCATION:
->ATTENDEES:
->DESCRIPTION:
->ROLE (support, gesture or sale): **support**
->PASSWORD (only for collaborator): **P@$$W0RD**
+>NAME: **COLLABORATER1**  
+>EMAIL: **test@test.fr**  
+>PHONE: **0555555555**  
+>COMPANY:  
+>SALES PERSON:  
+>PRICE:  
+>CONTRACT ID:  
+>START DATE:  
+>END DATE:  
+>LOCATION:  
+>ATTENDEES:  
+>DESCRIPTION:  
+>ROLE (support, gesture or sale): **support**  
+>PASSWORD (only for collaborator): **P@$$W0RD**  
 
 <br>
 
