@@ -1,5 +1,9 @@
-import datetime
+# TODO : Restruct code with more python files.
+# TODO : Use Clearscreen
+# TODO : Use Rich & Click
+# TODO : Add tests
 
+import datetime
 
 import uuid
 import psycopg2
@@ -41,8 +45,6 @@ def decode_jws(token):
 
 
 class MainController:
-    """ """
-
     @classmethod
     def auth_controller(cls, payload):
         username, pwd = MainView.auth()
@@ -71,6 +73,7 @@ class MainController:
     def menu_controller(cls, payload):
         choice = MainView.menu()
 
+        # TODO : use case instead of if/else with case dict.
         if choice == "1":
             return "customers_controller", payload
 
@@ -94,6 +97,7 @@ class MainController:
 
 
 class SubmenuController:
+    # TODO : Use decorator to return payload in each choice.
     @classmethod
     def customers_controller(cls, payload):
         choice = SubmenuView.customers()
@@ -107,9 +111,9 @@ class SubmenuController:
             if is_sale(role):
                 payload["table"] = "customer"
                 return "create_controller", payload
-            else:
-                ErrorView.role_error()
-                return "customers_controller", payload
+
+            ErrorView.role_error()
+            return "customers_controller", payload
         elif choice == "4":
             payload["table"] = "customer"
             payload["all_your"] = "all"
@@ -117,9 +121,9 @@ class SubmenuController:
             return "filter_controller", payload
         elif choice == "5":
             return "menu_controller", payload
-        else:
-            ErrorView.choice_error()
-            return "customers_controller", payload
+
+        ErrorView.choice_error()
+        return "customers_controller", payload
 
     @classmethod
     def contracts_controller(cls, payload):
@@ -494,6 +498,7 @@ class CollaboratorController:
 
 
 class CRUDController:
+    # TODO : HELPERS or UTILS
     @classmethod
     def create_controller(cls, payload):
         (
@@ -575,7 +580,7 @@ class CRUDController:
         table = payload["table"]
         choice = CRUDView.delete(obj)
 
-        if choice == "Y" or "y":
+        if choice.lower().strip() == "y":
             id = obj[0]
             query = f"DELETE FROM {table} WHERE id = '{id}'"
             cur.execute(query)
@@ -590,7 +595,7 @@ class CRUDController:
             sentry_sdk.capture_event(del_event)
             return "menu_controller", payload
 
-        elif choice == "N" or "n":
+        elif choice.lower().strip() == "n":
             return "find_one_controller", payload
 
         else:
@@ -628,7 +633,7 @@ class CRUDController:
                 cur.execute(query)
                 conn.commit()
 
-            if to_update == "status" and new_update == "True":
+            if (to_update == "status") and (new_update == "True"):
                 sign_event = {
                     "event_id": f"{uuid.uuid4()}",
                     "message": "Nouveau contract signé.",
@@ -662,6 +667,7 @@ class FilterController:
         token = decode_jws(payload["token"])
         collaborator = token["username"]
         order = None
+
         if table == "customer":
             choice = FilterView.customers_filter()
 
@@ -690,7 +696,7 @@ class FilterController:
                 ErrorView.choice_error()
                 return "filter_controller", payload
 
-            if order is not None and all_your == "all":
+            if order and (all_your == "all"):
                 query = f"SELECT {fields} FROM {table} ORDER BY {order}"
                 cur.execute(query)
                 customers_list = cur.fetchall()
@@ -699,7 +705,7 @@ class FilterController:
                     payload["filter_list"] = customers_list
                     return "all_customers_controller", payload
 
-            elif order is not None and all_your == "your":
+            elif order and (all_your == "your"):
                 query = f"SELECT {fields} FROM {table} WHERE commercial_username = '{collaborator}' ORDER BY {order}"
                 cur.execute(query)
                 customers_list = cur.fetchall()
@@ -790,7 +796,7 @@ class FilterController:
                 ErrorView.choice_error()
                 return "events_controller", payload
 
-            if order is not None and all_your == "all":
+            if order and (all_your == "all"):
                 query = f"SELECT {fields} FROM {table} ORDER BY {order}"
                 cur.execute(query)
                 events_list = cur.fetchall()
@@ -799,7 +805,7 @@ class FilterController:
                     payload["filter_list"] = events_list
                     return "all_events_controller", payload
 
-            elif order is not None and all_your == "your":
+            elif order and (all_your == "your"):
                 query = f"SELECT {fields} FROM {table} WHERE commercial_username = '{collaborator}' ORDER BY {order}"
                 cur.execute(query)
                 events_list = cur.fetchall()

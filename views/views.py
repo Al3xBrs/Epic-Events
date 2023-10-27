@@ -196,7 +196,9 @@ class SubmenuView:
         """
         )
         table = input("SELECT THE TABLE(customer, contract, event or collaborater) : ")
-        information = input("SELECT THE INFORMATION (name) : ")
+        information = input(
+            "SELECT THE INFORMATION (name, username, company, etc ...) : "
+        )
         value = input("TYPE THE VALUE (ex : Alex) : ")
 
         return table, information, value
@@ -472,9 +474,10 @@ class CRUDView:
         Leave blank if don't need
         (m) : mandatory
 
-        Customer (m): name, email, phone, company, sales_person
-        Contract (m): name, sales_person, price
-        Event (m): name, contract_id, start_date, end_date, location, attendees
+        Customer (m): name, email, phone, company
+        Contract (m): name (customer), sales_person, price
+        Event (m): name (customer), contract_id, start_date, end_date, location, attendees
+        Collaborater (m): name (collaborater), email, phone, password, role
         """
         )
         name = input("NAME : ")
@@ -518,7 +521,7 @@ class CRUDView:
         Choose the information to update, THEN, write the update.
 
         Ex : 
-            INFORMATION TO UPDATE : name
+            INFORMATION TO UPDATE : name or username or company or ...
             NEW UPDATE : Alex
         """
         )
@@ -537,4 +540,4 @@ class CRUDView:
         """
         )
 
-        return input("CHOISE : ")
+        return input("CHOICE : ")
