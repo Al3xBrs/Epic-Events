@@ -46,6 +46,19 @@ def decode_jws(token):
 
 class MainController:
     @classmethod
+    def login_logout(cls, payload):
+        while True:
+            choice = MainView.login_logout()
+            if choice == "1":
+                return "auth_controller", payload
+            elif choice == "2":
+                print("Good-Bye !")
+                break
+            else:
+                ErrorView.choice_error()
+                return "login_logout_controller", payload
+
+    @classmethod
     def auth_controller(cls, payload):
         username, pwd = MainView.auth()
         query = "SELECT username, password, role FROM collaborater WHERE username = %s"
@@ -90,7 +103,7 @@ class MainController:
             return "select_one_controller", payload
 
         elif choice == "6":
-            return "auth_controller", payload
+            return "login_logout_controller", payload
         else:
             ErrorView.choice_error()
             return "menu_controller", payload
@@ -165,7 +178,7 @@ class SubmenuController:
         elif choice == "2":
             return "your_events_controller", payload
         elif choice == "3":
-            if is_gesture(role):
+            if is_gesture(role) or is_sale(role):
                 payload["table"] = "event"
                 return "create_controller", payload
             else:

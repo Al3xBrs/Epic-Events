@@ -109,6 +109,17 @@ class ErrorView:
 class MainView:
     @log_decorator
     @staticmethod
+    def login_logout():
+        print(
+            """
+            1 - Log in
+            2 - Quit
+            """
+        )
+        return input("CHOICE : ")
+
+    @log_decorator
+    @staticmethod
     def auth():
         print(
             """

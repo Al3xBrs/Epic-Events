@@ -20,6 +20,7 @@ sentry_sdk.init(
 )
 
 routes = {
+    "login_logout_controller": MainController.login_logout,
     "auth_controller": MainController.auth_controller,
     "menu_controller": MainController.menu_controller,
     "customers_controller": SubmenuController.customers_controller,
@@ -43,7 +44,7 @@ routes = {
 
 def main():
     payload = {}
-    controller_key, payload = MainController.auth_controller(payload)
+    controller_key, payload = MainController.login_logout(payload)
 
     while True:
         controller = routes[controller_key]
